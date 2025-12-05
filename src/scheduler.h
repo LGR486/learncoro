@@ -1,6 +1,6 @@
 #pragma once
 
-// scheduler.h å°è£…è°ƒåº¦å™¨ä¸å„ç§ç®—æ³•
+// scheduler.h ·â×°µ÷¶ÈÆ÷Óë¸÷ÖÖËã·¨
 
 #include "context.h"
 
@@ -10,30 +10,30 @@ typedef enum {
 }Algorithm;
 
 
-// è°ƒåº¦å™¨
+// µ÷¶ÈÆ÷
 typedef struct scheduler {
-	coroutine_t* co;// è°ƒåº¦å™¨å½“å‰æ‰§è¡Œåç¨‹
-	coroutine_t* eco;// å°¾æŒ‡é’ˆ
-	Algorithm alg;// è°ƒåº¦ç®—æ³•
+	coroutine_t* co;// µ÷¶ÈÆ÷µ±Ç°Ö´ĞĞĞ­³Ì
+	coroutine_t* eco;// Î²Ö¸Õë
+	Algorithm alg;// µ÷¶ÈËã·¨
 
-	//int time_slice;// æ—¶é—´åˆ‡ç‰‡,ä¼¼ä¹ä¸å¤ªéœ€è¦
+	//int time_slice;// Ê±¼äÇĞÆ¬,ËÆºõ²»Ì«ĞèÒª
 	
-	// è°ƒåº¦å™¨ä¿¡æ¯
-	int lenth;// é˜Ÿåˆ—é•¿åº¦
+	// µ÷¶ÈÆ÷ĞÅÏ¢
+	int lenth;// ¶ÓÁĞ³¤¶È
 	//...
 } scheduler_t;
 
-// åˆ›å»ºè°ƒåº¦å™¨
+// ´´½¨µ÷¶ÈÆ÷
 scheduler_t* SchCreate(
 	Algorithm alg
 );
 
-// æ·»åŠ é˜Ÿåˆ—æœ«å°¾
+// Ìí¼Ó¶ÓÁĞÄ©Î²
 void push(
-	scheduler_t* sch,// è°ƒåº¦å™¨å¥æŸ„
-	void (*func)(void*),// å‡½æ•°åœ°å€
-	void* arg// å‡½æ•°å‚æ•°æ•°ç»„
+	scheduler_t* sch,// µ÷¶ÈÆ÷¾ä±ú
+	void (*func)(void*),// º¯ÊıµØÖ·
+	void* arg// º¯Êı²ÎÊıÊı×é
 );
 
-// è½®è½¬è°ƒåº¦å°è£…ä¸ªé˜Ÿåˆ—å°±è¡Œ
+// ÂÖ×ªµ÷¶È·â×°¸ö¶ÓÁĞ¾ÍĞĞ
 void RunRoudRobin(scheduler_t* sch);

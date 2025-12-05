@@ -1,20 +1,25 @@
 #include "context.h"
 
+
+// Ð­³ÌµÄÈë¿Ú
 static VOID WINAPI fiber_entry(context_t ipParameter) {
 	coroutine_t* co = (coroutine_t*)ipParameter;
 
 	co->func(co->arg);
 
-	co->state = FINISED;
+	co->state = FINISED;// Ð­³Ìº¯ÊýÔÚÕâÀï½áÊø
+	
+	// Ö´ÐÐÖ÷Ïß³Ì
 	current_coroutine = NULL;
-
 	SwitchToFiber(main_fiber);
+	// ÔÚµ÷¶ÈÆ÷ÖÐÖ±½ÓÌøµ½resume()ºó,Òò´ËÒ»°ã¶¼ÔÚresume()ºó´¦ÀíÍê³ÉµÄÐ­³Ì
 }
 
-// åˆ›å»ºåç¨‹
+// ´´½¨Ð­³Ì
 coroutine_t* create(void (*func)(void*), void* arg) {
+	// Ö÷Ïß³ÌÏËÎ¬³õÊ¼»¯,¿ÉÒÔµ¥¶À·Å³öÀ´init
 	if (!main_fiber) {
-		main_fiber = ConvertThreadToFiber(NULL);//WINPIA
+		main_fiber = ConvertThreadToFiber(NULL);
 		if (!main_fiber) {
 			main_fiber = ConvertThreadToFiberEx(NULL, FIBER_FLAG_FLOAT_SWITCH);
 		}
@@ -22,7 +27,7 @@ coroutine_t* create(void (*func)(void*), void* arg) {
 
 	coroutine_t* co = (coroutine_t*)malloc(sizeof(coroutine_t));
 	if (co == NULL) {
-		perror("å†…å­˜åˆ†é…å¤±è´¥");
+		perror("ÄÚ´æ·ÖÅäÊ§°Ü");
 		return NULL;
 	}
 
@@ -39,9 +44,9 @@ coroutine_t* create(void (*func)(void*), void* arg) {
 	return co;
 }
 
-// resume(co)åˆ†é…CPU,ç»™åç¨‹
+// resume(co)·ÖÅäCPU,¸øÐ­³Ì
 void resume(coroutine_t* co) {
-	if (!co || co->state == FINISED) return;
+	if (!co || co->state == FINISED) return;// ÔÚ´ËÌí¼Ó·µ»Ø¸æËßµ÷¶ÈÆ÷FINISED // Ó¦ÔÚfiber_entry´¦ÀíFINISED£¬ÕâÊÇ×î¿ì´¦Àí
 
 	coroutine_t* prev = current_coroutine;
 	current_coroutine = co;
@@ -55,8 +60,8 @@ void resume(coroutine_t* co) {
 	}
 }
 
-// yield()è®©å‡ºCPU,ç»™ä¸»çº¿ç¨‹,
-// ä¸æ˜¯é˜»å¡ž,ä¸»çº¿ç¨‹å¯èƒ½ä¼šç»“æŸ
+// yield()ÈÃ³öCPU,¸øÖ÷Ïß³Ì,
+// ²»ÊÇ×èÈû,Ö÷Ïß³Ì¿ÉÄÜ»á½áÊø
 void yield(void) {
 	if (!current_coroutine) return;
 
@@ -66,7 +71,7 @@ void yield(void) {
 	SwitchToFiber(co->main_fiber);
 }
 
-// destroy(co)é”€æ¯åç¨‹
+// destroy(co)Ïú»ÙÐ­³Ì
 void destroy(coroutine_t* co) {
 	if (co->fiber) {
 		DeleteFiber(co->fiber);

@@ -1,22 +1,30 @@
-// scheduler.c
-
-//#include <stdlib.h>//mallocå·²ç»åœ¨window.hé‡Œ
+//#include <stdlib.h>//mallocÒÑ¾­ÔÚwindow.hÀï
 #include <stdio.h>
 
 #include "scheduler.h"
 
 
 void RunRoudRobin(scheduler_t* sch) {
-	// æš‚æ—¶æ²¡æœ‰åˆ é™¤é˜Ÿåˆ—ï¼Œé‡Šæ”¾èµ„æº
-	// æš‚æ—¶æ²¡æœ‰ä¸­æ–­
-	// æš‚æ—¶æ˜¯æ­»å¾ªç¯
-	while (1) {
+	// ÔİÊ±Ã»ÓĞÖĞ¶Ï
+	while (sch->co != NULL) {
 		resume(sch->co);
-		sch->eco->next = sch->co;
-		sch->eco = sch->co;
-		coroutine_t* temp = sch->co;
-		sch->co = sch->co->next;
-		temp->next = NULL;
+
+		// ÒÆ³ıÍê³ÉµÄĞ­³Ì£¬Ö´ĞĞÏÂÒ»¸ö
+		if (sch->co->state == FINISED) {
+			coroutine_t* temp = sch->co;
+			sch->co = sch->co->next; // ÕâÀï¿ÉÒÔÎªNULL
+			destroy(temp);
+			sch->lenth--;
+		}
+		// ·ñÔòÒÆ¶¯µ½Ä©Î²
+		else {
+			sch->eco->next = sch->co;
+			sch->eco = sch->co;
+			coroutine_t* temp = sch->co;
+			sch->co = sch->co->next;
+			temp->next = NULL;
+		}
+		
 	}
 }
 
@@ -37,7 +45,7 @@ void push(scheduler_t* sch, void (*func)(void*), void* arg) {
 scheduler_t* SchCreate(Algorithm alg) {
 	scheduler_t* sch = (scheduler_t*)malloc(sizeof(scheduler_t));
 	if (sch == NULL) {
-		fprintf(stderr, "å†…å­˜åˆ†é…å¤±è´¥ï¼\n");
+		fprintf(stderr, "ÄÚ´æ·ÖÅäÊ§°Ü£¡\n");
 		return NULL;
 	}
 	sch->co = NULL;

@@ -1,34 +1,38 @@
 #pragma once
 // context.h
-// ä¸Šä¸‹æ–‡ç»“æ„å’Œåç¨‹å—
+// ÉÏÏÂÎÄ½á¹¹ºÍĞ­³Ì¿é
 
-// åç¨‹çŠ¶æ€
+// Ğ­³Ì×´Ì¬
 typedef enum {
-	READY,
-	RUNNING,
-	AWAIT,
-	FINISED,
+	READY,// ¾ÍĞ÷
+	RUNNING,// ÔËĞĞ
+	AWAIT,// ĞİÃß
+	FINISED,// Íê³É
 } State ;
 
-#include <windows.h>
-// ç›´æ¥ä½¿ç”¨WINAPIçš„ä¸Šä¸‹æ–‡ç»“æ„
+#include <windows.h>// ÏÈÓÃWINAPIÀí½âĞ©Ô­Àí ÔÙ×Ô¼º·â×°ÉÏÏÂÎÄ µ½Ê±ÒªÒÆ¶¯´úÂë
+// Ö±½ÓÊ¹ÓÃWINAPIµÄÉÏÏÂÎÄ½á¹¹
+// LPVOID ÊÇvoid* context_t¾ÍÊÇ¸ö´¿void* ÀàĞÍ ËùÒÔcontext_t¾ÍÊÇ¿ÕµÄÉÏÏÂÎÄ
 typedef LPVOID context_t;
-// åç¨‹æ§åˆ¶å—
+// Ğ­³Ì¿ØÖÆ¿é
 typedef struct coroutine {
-	context_t fiber;// åç¨‹çš„ä¸Šä¸‹æ–‡
-	void (*func)(void*);// void func(void* arg) è¿™ä¹ˆå®šä¹‰
-	void* arg;// å‡½æ•°å‚æ•°æ•°ç»„æŒ‡é’ˆ
-	int state;// åç¨‹çŠ¶æ€
-	context_t main_fiber;// ä¸»çº¿ç¨‹çš„ä¸Šä¸‹æ–‡
-	struct coroutine* next;// é“¾å…¥å°±ç»ªé˜Ÿåˆ—
+	context_t fiber;// Ğ­³ÌµÄÉÏÏÂÎÄ
+	context_t main_fiber;// Ö÷Ïß³ÌµÄÉÏÏÂÎÄ
+
+	void (*func)(void*);// void func(void* arg) ÕâÃ´¶¨Òå
+	void* arg;// º¯Êı²ÎÊıÊı×éÖ¸Õë
+	int state;// Ğ­³Ì×´Ì¬
+	
+	struct coroutine* next;// Á´Èë¾ÍĞ÷¶ÓÁĞ
 	//...
 } coroutine_t;
 
-static __declspec(thread) coroutine_t* current_coroutine = NULL;
-static __declspec(thread) context_t main_fiber;
+static __declspec(thread) coroutine_t* current_coroutine = NULL;// ÕıÔÚÖ´ĞĞµÄĞ­³Ì,NULL±íÊ¾ÔÚÖ´ĞĞÖ÷Ïß³Ì
+static __declspec(thread) context_t main_fiber;// Ö÷Ïß³ÌÏËÎ¬µØÖ·
 
 static VOID WINAPI fiber_entry(context_t ipParameter);
 coroutine_t* create(void (*func)(void*), void* arg);
 void resume(coroutine_t* co);
 void yield(void);
 void destroy(coroutine_t* co);
+
