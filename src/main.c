@@ -1,4 +1,4 @@
-// main.c暂时的测试文件
+// 测试文件main.c
 
 #include <stdio.h>
 
@@ -12,7 +12,6 @@ void todo(void* arg) {
 }
 
 int main() {
-	fprintf(stderr, "内存分配失败！\n");
 	printf("hello wrold\n");
 	scheduler_t* sch2 = SchCreate(ROUND_ROBIN);
 	scheduler_t sch = {
@@ -25,8 +24,9 @@ int main() {
 		push(sch2, todo, NULL);
 		push(&sch, todo, NULL);
 	}
-	printf("%d\n", sch2->lenth);
-	RunRoudRobin(sch2);//目前的Run是死循环
+	printf("lenth: %d == 10\n", sch2->lenth);
+	RunRoudRobin(sch2);
 	RunRoudRobin(&sch);
+	printf("lenth: %d == 0\n", sch.lenth);
 	return 0;
 }
