@@ -29,7 +29,7 @@ void RunRoudRobin(scheduler_t* sch) {
 }
 
 void push(scheduler_t* sch, void (*func)(void*), void* arg) {
-	coroutine_t* co = create(func, arg);
+	coroutine_t* co = CreateCoroutine(func, arg);
 	if (sch->co == NULL) {
 		sch->co = co;
 		sch->eco = co;

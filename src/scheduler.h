@@ -4,6 +4,7 @@
 
 #include "context.h"
 
+
 typedef enum {
 	ROUND_ROBIN,
 	//...
@@ -32,7 +33,7 @@ scheduler_t* SchCreate(
 void push(
 	scheduler_t* sch,// 调度器句柄
 	void (*func)(void*),// 函数地址
-	void* arg// 函数参数数组
+	void* arg// 函数参数数组或者结构
 );
 
 // 轮转调度封装个队列就行

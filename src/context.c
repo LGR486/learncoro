@@ -1,6 +1,73 @@
 #include "context.h"
 
+#if defined(MYSELF)
+// 每个协程的入口
+static void co_entry(coroutine_t* co) {
+	co->func(co->arr);
+	co->state = FINISED;
 
+	current_coroutine = NULL;
+	SwitchContext(co->ctx, main_ctx);
+	// 交给主线程释放内存
+}
+
+//感觉不需要
+context_t* CreateContext(void (*func)()) {
+	context_t* ctx = (context_t*)malloc(sizeof(context_t));
+	if (ctx == NULL) {
+		fprintf(stderr, "CreateContext:内存分配失败");
+		return NULL;
+	}
+	memset(ctx, 0, sizeof(context_t));
+
+	ctx->eip = func;
+
+	return ctx;
+}
+
+coroutine_t* CreateCoroutine(void (*func)(void*),void* arr) {
+	coroutine_t* co = (coroutine_t*)malloc(sizeof(coroutine_t));
+	if (co == NULL) {
+		fprintf(stderr, "CreateCoroutine:内存分配失败");
+		return NULL;
+	}
+	
+	co->main = main_ctx;
+	co->state = READY;
+	co->next = NULL;
+
+	co->func = func;
+	co->arr = arr;
+
+	co->ctx = CreateContext(co_entry);
+	//...
+}
+
+void resume(coroutine_t *co) {
+	coroutine_t* old_co = current_coroutine;
+	current_coroutine = co;
+
+	SwitchContext(old_co->ctx, co->ctx);
+}
+
+// 给主线程
+void yield() {
+	if (current_coroutine) {
+		return;
+	}
+	coroutine_t* co = current_coroutine;
+	current_coroutine = NULL;// NULL表没有运行的协程，即运行主线程
+	SwitchContext(co->ctx, co->main);
+}
+
+void destroy(coroutine_t* co) {
+	if (co->ctx) {
+		free(co->ctx);
+	}
+	free(co);
+}
+
+#else 
 // 协程的入口
 static VOID WINAPI fiber_entry(context_t ipParameter) {
 	coroutine_t* co = (coroutine_t*)ipParameter;
@@ -8,15 +75,15 @@ static VOID WINAPI fiber_entry(context_t ipParameter) {
 	co->func(co->arg);
 
 	co->state = FINISED;// 协程函数在这里结束
-	
+
 	// 执行主线程
-	current_coroutine = NULL;
+	win_current_coroutine = NULL;
 	SwitchToFiber(main_fiber);
 	// 在调度器中直接跳到resume()后,因此一般都在resume()后处理完成的协程
 }
 
 // 创建协程
-coroutine_t* create(void (*func)(void*), void* arg) {
+coroutine_t* CreateCoroutine(void (*func)(void*), void* arg) {
 	// 主线程纤维初始化,可以单独放出来init
 	if (!main_fiber) {
 		main_fiber = ConvertThreadToFiber(NULL);
@@ -46,16 +113,16 @@ coroutine_t* create(void (*func)(void*), void* arg) {
 
 // resume(co)分配CPU,给协程
 void resume(coroutine_t* co) {
-	if (!co || co->state == FINISED) return;// 在此添加返回告诉调度器FINISED // 应在fiber_entry处理FINISED，这是最快处理
+	//if (!co || co->state == FINISED) return;
 
-	coroutine_t* prev = current_coroutine;
-	current_coroutine = co;
+	coroutine_t* prev = win_current_coroutine;
+	win_current_coroutine = co;
 	co->state = RUNNING;
 
 	SwitchToFiber(co->fiber);
 
-	current_coroutine = prev;
-	if (co->state == RUNNING) {
+	win_current_coroutine = prev;
+	if (co->state == RUNNING) { // 是否有必要判断 RUNNING ???
 		co->state = READY;
 	}
 }
@@ -63,10 +130,10 @@ void resume(coroutine_t* co) {
 // yield()让出CPU,给主线程,
 // 不是阻塞,主线程可能会结束
 void yield(void) {
-	if (!current_coroutine) return;
+	if (!win_current_coroutine) return;
 
-	coroutine_t* co = current_coroutine;
-	current_coroutine = NULL;
+	coroutine_t* co = win_current_coroutine;
+	win_current_coroutine = NULL;
 
 	SwitchToFiber(co->main_fiber);
 }
@@ -78,3 +145,4 @@ void destroy(coroutine_t* co) {
 	}
 	free(co);
 }
+#endif

@@ -1,9 +1,11 @@
-// æµ‹è¯•æ–‡ä»¶main.c
-
 #include <stdio.h>
 
-#include "context.h"
+// ÁÙÊ±²âÊÔÎÄ¼þ
+
+
 #include "scheduler.h"
+
+//extern void SwitchContext(context_t* old_ctx, context_t* new_ctx);
 
 void todo(void* arg) {
 	printf("hello\n");
@@ -28,5 +30,6 @@ int main() {
 	RunRoudRobin(sch2);
 	RunRoudRobin(&sch);
 	printf("lenth: %d == 0\n", sch.lenth);
+	
 	return 0;
 }
