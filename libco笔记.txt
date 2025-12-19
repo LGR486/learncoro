@@ -1,0 +1,62 @@
+AT&T 语法 mov 源 目的
+movl 移动long字节即4字节32位
+
+32架构的寄存器名称: {
+    esp 栈顶指针        始终指向栈顶
+    eax 累加寄存器      可以做中间变量
+    ebp 基址指针        专用栈帧指针 一般保存一个地址不变 方便偏移访问参数和局部变量
+    esi 源索引寄存器    字符串操作
+    edi 目的索引寄存器  字符串操作
+    edx 数据寄存器      配合eax使用
+    ecx 计数器          用于循环计数
+    ebx 基址寄存器      存放重要数据，确保长期不会改变
+}
+
+4(%esp) esp高4字节
+
+#if defined(__i386__)
+    movl 4(%esp), %eax ; 取函数的第一个参数地址(这里参数就是上下文结构)，eax这里做中间变量作用
+    movl %esp,  28(%eax) ; 保存栈
+    movl %ebp, 24(%eax) ; 保存基址
+    movl %esi, 20(%eax) ; 
+    movl %edi, 16(%eax)
+    movl %edx, 12(%eax)
+    movl %ecx, 8(%eax)
+    movl %ebx, 4(%eax)
+
+
+    movl 8(%esp), %eax ; 取函数的第二个参数地址(这里参数就是上下文结构)
+    movl 4(%eax), %ebx ; 读取
+    movl 8(%eax), %ecx
+    movl 12(%eax), %edx
+    movl 16(%eax), %edi
+    movl 20(%eax), %esi
+    movl 24(%eax), %ebp
+    movl 28(%eax), %esp
+
+	ret
+
+以上是基于X86架构的上下文切换，%esp保存是返回地址，即函数地址加上偏移量，记录了函数代码段的断点
+%esp的高段地址压入了传入的参数，高到低：参数i...参数2、参数1
+基于此，因对线程(协程)栈存储了什么要有所了解
+
+有关VS2022 C语言和汇编
+    首先添加项目依赖 asm...
+    设置项目属性X64, X86
+    
+.asm文件
+; WIN32
+.386 ;声明是x86
+.model flat, c ; 声明调用约定 stdcall目前不会用
+
+.code
+func proc ; c调用约定
+    mov eax 5
+    ret ; 函数必须写
+func endp
+end
+
+在c文件这样声明
+extern void func(/*参数可以自定义*/);
+
+注意.asm不要和.c文件重名,因为生成的都是.obj文件!!!

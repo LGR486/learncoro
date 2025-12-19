@@ -1,0 +1,40 @@
+/-------------2025.12.3--------------/
+利用windowsAPI与AI实现了最基本的协程
+关键单词 {
+	context, coroutine, yield, resume, 
+	fiber, anync, current, __declspec,
+	scheduler,
+}
+
+直接实现最简单的轮转调度:
+while (1) {
+	resume(co1);
+	resume(co2);
+}
+封装了轮转调度器,其实就是一个队列
+还是要去搞懂VS的多文件操作,目前的问题是不要在.h文件定义函数,只能声明
+/-------------2025.12.5--------------/
+记录用到WINAPI的功能 {
+	LPVOID 就是 void*
+	void SwitchToFiber( LPVOID ) {
+		切换上下文,保存当前上下文,恢复目标上下文
+	}
+	LPVOID ConvertThreadToFiber(LPVOID) {
+		用于将当前线程转换为可执行纤维的线程
+		LPVOID可以为NULL
+	}
+	LPVOID CreateFiber(SIZE_T,LPFIBER_START_ROUTINE,LPVOID){
+		SIZE_T 栈堆大小
+		LPFIBER_START_ROUTINE 入口函数指针
+		LPVOID 用户数据
+	}
+}
+分析了WINAPI纤程原理(如何调用的原理...)
+
+/--------------2025.12.13-------------/
+这一段时间看完并发原理,
+最近开始看libco,了解汇编,最近的笔记会写在libco笔记中
+/--------------2025.12.15-------------/
+遇上上下文初始化问题
+/--------------2025.12.19-------------/ ps: 12月好像没多少时间开发,大部分时间在学习原理和考试摸鱼了
+才发现协程切换是要上下文+栈布局
