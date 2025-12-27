@@ -12,9 +12,11 @@
 
 ; WIN32
 ; 暂时有bug
+; 根据libco改编,支持windows的汇编
 SwitchContext proc
 	
-	mov eax, [esp+4]
+	mov eax, [esp+4] ; old_ctx
+
 	mov [eax+4], ebx
 	mov [eax+8], ecx
 	mov [eax+12], edx
@@ -23,8 +25,9 @@ SwitchContext proc
 	mov [eax+24], ebp
 	mov [eax+28], esp
 
-	mov eax, [esp+8]
-	mov ebx, [eax+4]
+	mov eax, [esp+8] ; new_ctx
+
+	mov ebx, [eax+4] ; ebx = new_ctx->ebx 不能为NULL
 	mov ecx, [eax+8]
 	mov edx, [eax+12]
 	mov edi, [eax+16]
@@ -32,6 +35,8 @@ SwitchContext proc
 	mov ebp, [eax+24]
 	mov esp, [eax+28]
 
+	;mov eax, [eax+0] ; eax = new_ctx->eip;
+	;jmp eax
 	ret
 
 SwitchContext endp

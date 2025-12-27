@@ -10,19 +10,19 @@ typedef enum {
 } State;
 
 //启用自定义结构体
-//#define MYSELF
+#define MYSELF
 
 #if defined(MYSELF)
 typedef struct context {
-	int eip; //返回地址
+	int eip; //指令地址
 	int ebx; //基址寄存器
 	int ecx; //计数器
 	int edx; //数据寄存器
 	int edi; //目的索引寄存器
 	int esi; //源索引寄存器
 	int ebp; //栈帧指针
-	int esp; //栈顶指针
-} context_t;
+	char* esp; //栈顶指针
+} context_t; 
 
 typedef struct coroutine {
 	context_t* ctx;// 上下文
@@ -34,6 +34,9 @@ typedef struct coroutine {
 	int state; // 状态
 
 	struct coroutine* next; // 链入队列
+
+	char stack[8 * 1024]; // 8kb的独立栈
+	int stack_size;
 } coroutine_t;
 
 #include<stdlib.h>
@@ -42,7 +45,12 @@ typedef struct coroutine {
 // 静态指针体积不大
 
 static coroutine_t* current_coroutine = NULL;
-static context_t* main_ctx;// 主线程的上下文是随机地址,但是知道地址就行了
+// 主线程的上下文是随机地址,但是知道地址就行了,必须分配一个随机地址,
+// 不然默认就是NULL,在NULL附近写入会发生异常,为此必须引入get_main_context()
+static context_t* main_ctx = NULL;
+
+// 获得main_ctx的地址,实现初始化和不断地空指针检查
+context_t* getptr_main_context();
 
 coroutine_t* CreateCoroutine(void (*func)(void*), void* arr);
 
@@ -76,7 +84,7 @@ typedef struct coroutine {
 	//...
 } coroutine_t;
 
-static __declspec(thread) coroutine_t* win_current_coroutine = NULL;// 正在执行的协程,NULL表示在执行主线程
+static __declspec(thread) coroutine_t* win_current_coroutine = NULL;// 正在执行的协程,NULL表示在执行主线程,
 static __declspec(thread) context_t main_fiber;// 主线程纤维地址
 
 // 以下都是与WINAPI直接交互的函数, 用自定义上下文结构要重现这些函数接口
