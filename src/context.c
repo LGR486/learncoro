@@ -12,25 +12,15 @@ static void co_entry(coroutine_t* co) {
 }
 
 // 必须初始化
-context_t* CreateContext(void (*func)()) {
+context_t* CreateContext() {
 	context_t* ctx = (context_t*)malloc(sizeof(context_t));
 	if (ctx == NULL) {
 		fprintf(stderr, "CreateContext:内存分配失败");
 		return NULL;
 	}
 	memset(ctx, 0, sizeof(context_t));
-	//ctx->eip = 0;
-	//ctx->ebx = 0;
-	//ctx->ecx = 0;
-	//ctx->edx = 0;
-	//ctx->edi = 0;
-	//ctx->esi = 0;
-	//ctx->ebp = 0;
-	//ctx->esp = 0;
 
 	// make...???放在CreateCoroutine
-
-	//ctx->esp = func; //
 
 	return ctx;
 }
@@ -48,26 +38,34 @@ coroutine_t* CreateCoroutine(void (*func)(void*),void* arr) {
 	co->main = getptr_main_context();
 	co->state = READY;
 	co->next = NULL;
+	co->priority = 0;
 
 	co->func = func;
 	co->arr = arr;
 
-	co->ctx = CreateContext(co_entry);// bug
+	co->ctx = CreateContext();
 
 	// coroutine_stack_init 
 	// 要始终保持16字节对齐
 	// 可以通过反汇编来确定栈布局，这是最准确的
 	co->stack_size = 8 * 1024;
-	char* sp = co->stack + co->stack_size - sizeof(co);
-	sp = (void*)((unsigned long)sp & ~15);
+	char* sp = co->stack + co->stack_size;
+	sp = (void*)((unsigned long)sp & ~15);// 16字节对齐
+	sp -= sizeof(co);
 	*(coroutine_t**)(sp) = co;
 
 	sp = sp - sizeof(void*)*2;//返回地址以上8字节是参数1
 	void** addr = (void**)(sp);// *(void**)(sp) = (void*)(函数指针)
 	*addr = (void*)(co_entry);
 
-	co->ctx->esp = sp;
-	//co->ctx->ebp = sp;//不要ebp赋值，co_entry()函数开头会自动push ebp
+	co->ctx->esp = sp; // 保存协程栈的esp这非常重要,如果esp是0就说明出错了
+
+	/* co指针   4字节
+	** 空       4字节
+	** co_entry地址  4字节
+	*/
+	
+	//co->ctx->ebp = sp;//不需要ebp赋值，co_entry()函数开头会自动push ebp
 	//init_end
 	
 	//...
@@ -84,16 +82,12 @@ context_t* getptr_main_context() {
 			return NULL;
 		}
 
-		//debug
-		//memset(main_ctx, 1, sizeof(context_t));
 	}
 	return main_ctx;
 }
 
 
 void resume(coroutine_t *co) {
-	
-	coroutine_t* old_co = current_coroutine;//
 	current_coroutine = co;
 
 	SwitchContext(getptr_main_context(), co->ctx);

@@ -32,11 +32,12 @@ typedef struct coroutine {
 	void* arr; // 参数
 
 	int state; // 状态
+	int priority; // 优先级,1~10,10为最高优先级
 
 	struct coroutine* next; // 链入队列
 
-	char stack[8 * 1024]; // 8kb的独立栈
 	int stack_size;
+	char stack[8 * 1024]; // 8kb的独立栈
 } coroutine_t;
 
 #include<stdlib.h>
@@ -60,8 +61,8 @@ coroutine_t* CreateCoroutine(void (*func)(void*), void* arr);
 // 见context_switch.asm
 extern void SwitchContext(context_t* old_ctx, context_t* new_ctx);// 只需重写这个函数在加上数据结构就可以实现上下文切换//用汇编实现
 
-void SaveContext();// 保存
-void RestoreContext();// 恢复
+//void SaveContext();// 保存
+//void RestoreContext();// 恢复
 void yield();
 void resume(coroutine_t* co);
 void destroy(coroutine_t* co);
